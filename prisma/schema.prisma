@@ -1,0 +1,97 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id                String   @id @default(cuid())
+  userId            String   @unique
+  firstName         String
+  lastName          String
+  idNumber          String   @unique
+  email             String   @unique
+  dateOfBirth       DateTime
+  primaryPhoneNum   String
+  secondaryPhoneNum String?
+  isOwner           Boolean  @default(false)
+
+  // Relations
+  storeId String?
+  store   Store?  @relation(fields: [storeId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Store {
+  id       String @id @default(cuid())
+  name     String
+  industry String
+  location String
+  district String
+  country  String
+
+  // Relations
+  users               User[]
+  items               Item[]
+  itemTypeDepartments ItemTypeDepartment[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Item {
+  id             String  @id @default(cuid())
+  itemNumber     String  @unique
+  itemType       String // e.g. "Inventory", "Service"
+  departmentName String
+  name           String
+  description    String?
+
+  unitSize String?
+  unitType String?
+
+  qtyAvailable     Int  @default(0)
+  lowStockAlertQty Int?
+
+  sellingPrice     Float
+  costPrice        Float?
+  markupPercentage Float?
+
+  // Relations
+  storeId String
+  store   Store       @relation(fields: [storeId], references: [id])
+  images  ItemImage[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ItemImage {
+  id             String  @id @default(cuid())
+  url            String
+  itemId         String
+  isDisplayImage Boolean @default(false)
+
+  item Item @relation(fields: [itemId], references: [id], onDelete: Cascade)
+}
+
+model ItemTypeDepartment {
+  id             String @id @default(cuid())
+  itemType       String
+  departmentName String
+
+  // Optional store scope (so each store can have its own combos)
+  storeId String
+  store   Store  @relation(fields: [storeId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([itemType, departmentName, storeId])
+}
