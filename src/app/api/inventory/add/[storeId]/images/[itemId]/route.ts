@@ -1,4 +1,4 @@
-// api/inventory/add/images/[itemId]/route.ts
+// api/inventory/add/[storeId]/images/[itemId]/route.ts
 
 import { addItemImage, getItemById } from "@/lib/services/inventory.services";
 import { badRequest, created, notFound, serverError } from "@/utils/response.handler";

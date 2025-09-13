@@ -68,11 +68,39 @@ export async function getLastItemNumber() {
 }
 
 // Create a new item in the inventory(/api/inventory/add/[storeId]/route.ts)
-export async function createItem(data: CreateItemInput) {
+export async function createItem(data: CreateItemInput & {
+    images?: { url: string; isDisplayImage: boolean }[];
+}) {
     try {
         const item = await prisma.item.create({
-            data: { ...data },
+            data: {
+                itemNumber: data.itemNumber,
+                itemType: data.itemType,
+                departmentName: data.departmentName,
+                name: data.name,
+                description: data.description,
+                unitSize: data.unitSize,
+                unitType: data.unitType,
+                qtyAvailable: data.qtyAvailable ?? 0,
+                lowStockAlertQty: data.lowStockAlertQty,
+                sellingPrice: data.sellingPrice,
+                costPrice: data.costPrice,
+                markupPercentage: data.markupPercentage,
+                storeId: data.storeId,
+
+                // 👇 relation for images if provided
+                images: data.images
+                    ? {
+                        create: data.images.map((img) => ({
+                            url: img.url,
+                            isDisplayImage: img.isDisplayImage,
+                        })),
+                    }
+                    : undefined,
+            },
+            include: { images: true },
         });
+
         return { success: true, item };
     } catch (error: any) {
         console.error("[Create Item Error]:", error);
@@ -84,74 +112,74 @@ export async function createItem(data: CreateItemInput) {
 // Get items with search, filter, and pagination(/api/inventory/get/[storeId]route.ts)
 export async function getItems(params: GetItemsParams) {
     const { storeId, search, itemType, departmentName, page = 1, take = 14 } = params;
-  
+
     const skip = (page - 1) * take;
-  
+
     // Build dynamic "where" clause
     const where: any = {
-      storeId,
-      AND: []
+        storeId,
+        AND: []
     };
-  
+
     if (search) {
-      where.AND.push({
-        OR: [
-          { itemNumber: { contains: search, mode: "insensitive" } },
-          { departmentName: { contains: search, mode: "insensitive" } },
-          { name: { contains: search, mode: "insensitive" } },
-          { description: { contains: search, mode: "insensitive" } },
-          { unitSize: { contains: search, mode: "insensitive" } },
-          { unitType: { contains: search, mode: "insensitive" } },
-        ],
-      });
+        where.AND.push({
+            OR: [
+                { itemNumber: { contains: search, mode: "insensitive" } },
+                { departmentName: { contains: search, mode: "insensitive" } },
+                { name: { contains: search, mode: "insensitive" } },
+                { description: { contains: search, mode: "insensitive" } },
+                { unitSize: { contains: search, mode: "insensitive" } },
+                { unitType: { contains: search, mode: "insensitive" } },
+            ],
+        });
     }
-  
+
     if (itemType) {
-      where.AND.push({ itemType });
+        where.AND.push({ itemType });
     }
-  
+
     if (departmentName) {
-      where.AND.push({ departmentName });
+        where.AND.push({ departmentName });
     }
-  
+
     try {
-      const [items, totalItems] = await Promise.all([
-        prisma.item.findMany({
-          where,
-          take,
-          skip,
-          orderBy: { createdAt: "desc" },
-          include: { images: true },
-        }),
-        prisma.item.count({ where })
-      ]);
-  
-      const totalPages = Math.ceil(totalItems / take);
-  
-      return {
-        items,
-        meta: {
-          page,
-          take,
-          totalItems,
-          totalPages,
-          hasNextPage: page < totalPages,
-        },
-      };
+        const [items, totalItems] = await Promise.all([
+            prisma.item.findMany({
+                where,
+                take,
+                skip,
+                orderBy: { createdAt: "desc" },
+                include: { images: true },
+            }),
+            prisma.item.count({ where })
+        ]);
+
+        const totalPages = Math.ceil(totalItems / take);
+
+        return {
+            items,
+            meta: {
+                page,
+                take,
+                totalItems,
+                totalPages,
+                hasNextPage: page < totalPages,
+            },
+        };
     } catch (error) {
-      console.error("[Get Items Error]", error);
-      return {
-        items: [],
-        meta: {
-          page,
-          take,
-          totalItems: 0,
-          totalPages: 0,
-          hasNextPage: false,
-        },
-      };
+        console.error("[Get Items Error]", error);
+        return {
+            items: [],
+            meta: {
+                page,
+                take,
+                totalItems: 0,
+                totalPages: 0,
+                hasNextPage: false,
+            },
+        };
     }
-  }
+}
 
 // Add image to an item (/api/inventory/add/images/[itemId]/route.ts)
 export async function addItemImage(itemId: string, file: File, isDisplayImage = false) {
