@@ -3,6 +3,12 @@
 import prisma from "@/lib/prisma/prisma";
 import { uploadImage } from "../supabase/uploadImage";
 
+export type ImageInput = {
+    id?: string;
+    url: string;
+    isDisplayImage?: boolean;
+  };
+
 export interface CreateItemInput {
     itemNumber: string;
     itemType: string;
@@ -17,6 +23,7 @@ export interface CreateItemInput {
     costPrice?: number;
     markupPercentage?: number;
     storeId: string;
+    images?: ImageInput[];
 }
 
 export interface GetItemsParams {
