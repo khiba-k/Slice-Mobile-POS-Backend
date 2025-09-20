@@ -13,10 +13,16 @@ import {
 } from "@/utils/response.handler";
 import { validateCreateItem } from "@/utils/validate.utils";
 
-export async function POST(req: Request, { params }: { params: { storeId: string } }) {
+type RouteContext = {
+    params: Promise<{
+        storeId: string;
+    }>;
+};
+
+export async function POST(req: Request, context: RouteContext) {
     try {
         const body = await req.json();
-        const { storeId } = params;
+        const { storeId } = await context.params;
 
         // ✅ Now body includes `images: [{ url, isDisplayImage }]`
         const isNotValid = validateCreateItem(body);

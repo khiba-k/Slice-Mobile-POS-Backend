@@ -2,8 +2,11 @@ import { NextRequest } from "next/server";
 import prisma from "@/lib/prisma/prisma";
 import { notFound, success, serverError } from "@/utils/response.handler";
 
-export async function DELETE(req: NextRequest, { params }: { params: { itemId: string } }) {
-    const { itemId } = params;
+export async function DELETE(
+    req: NextRequest,
+    { params }: { params: Promise<{ itemId: string }> }
+) {
+    const { itemId } = await params;
 
     try {
         const existingItem = await prisma.item.findUnique({ where: { id: itemId } });

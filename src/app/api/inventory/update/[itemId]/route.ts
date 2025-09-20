@@ -11,9 +11,9 @@ import { CreateItemInput, ImageInput } from "@/lib/services/inventory.services";
 
 export async function PATCH(
     req: NextRequest,
-    { params }: { params: { itemId: string } }
+    { params }: { params: Promise<{ itemId: string }> }
 ) {
-    const { itemId } = params;
+    const { itemId } = await params;
 
     try {
         const body: Partial<CreateItemInput> = await req.json();
@@ -61,7 +61,7 @@ export async function PATCH(
         }
 
         // Step 4: Update the item itself (without images to avoid clobbering relations)
-        const { images, ...itemDataWithoutImages } = body;
+        const { images: _images, ...itemDataWithoutImages } = body;
 
         const updatedItem = await prisma.item.update({
             where: { id: itemId },

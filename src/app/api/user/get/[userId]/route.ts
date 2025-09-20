@@ -5,9 +5,9 @@ import { getUserByUserId } from "@/lib/services/user.services";
 import { badRequest, notFound, success, serverError } from "@/utils/response.handler";
 
 interface Params {
-    params: {
+    params: Promise<{
         userId: string;
-    };
+    }>;
 }
 
 export async function GET(req: NextRequest, { params }: Params) {

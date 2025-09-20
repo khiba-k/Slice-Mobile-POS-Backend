@@ -4,7 +4,7 @@ import { success, serverError } from "@/utils/response.handler";
 
 export async function GET(
     req: Request,
-    { params }: { params: { storeId: string } }
+    { params }: { params: Promise<{ storeId: string }> }
 ) {
     try {
         const { storeId } = await params;

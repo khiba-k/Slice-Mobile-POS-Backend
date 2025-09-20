@@ -2,7 +2,7 @@
 import { getItemTypeDepartmentsByStore } from "@/lib/services/inventory.services";
 import { badRequest, serverError, success } from "@/utils/response.handler";
 
-export async function GET(req: Request, { params }: { params: { storeId: string } }) {
+export async function GET(req: Request, { params }: { params: Promise<{ storeId: string }> }) {
     try {
         const { storeId } = await params;
 

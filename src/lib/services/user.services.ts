@@ -47,9 +47,14 @@ export async function createUser(data: CreateUserInput) {
         });
 
         return { success: true, user };
-    } catch (error: any) {
+    } catch (error: unknown) {
+        if (error instanceof Error) {
+            console.error("[Create User Error]:", error);
+            return { success: false, error: error.message };
+        }
+
         console.error("[Create User Error]:", error);
-        return { success: false, error: error.message };
+        return { success: false, error: "Unknown error" };
     }
 }
 
@@ -63,11 +68,17 @@ export async function createStore(data: CreateStoreInput) {
         });
 
         return { success: true, store };
-    } catch (error: any) {
+    } catch (error: unknown) {
+        if (error instanceof Error) {
+            console.error("[Create Store Error]:", error);
+            return { success: false, error: error.message };
+        }
+
         console.error("[Create Store Error]:", error);
-        return { success: false, error: error.message };
+        return { success: false, error: "Unknown error" };
     }
 }
+
 
 // Check if user with the same ID number exists (api/user/create/route.ts)
 export async function checkUserByIdNumber(idNumber: string) {

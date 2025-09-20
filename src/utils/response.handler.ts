@@ -1,13 +1,13 @@
 // utils/responseHandler.ts
 
-export const success = (data: any = null, message = 'Success') => {
+export const success = (data: unknown = null, message = 'Success') => {
     return new Response(
         JSON.stringify({ success: true, message, data }),
         { status: 200, headers: { 'Content-Type': 'application/json' } }
     );
 };
 
-export const created = (data: any = null, message = 'Resource created') => {
+export const created = (data: unknown = null, message = 'Resource created') => {
     return new Response(
         JSON.stringify({ success: true, message, data }),
         { status: 201, headers: { 'Content-Type': 'application/json' } }

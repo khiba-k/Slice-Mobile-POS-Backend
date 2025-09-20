@@ -1,5 +1,5 @@
 // lib/services/item.services.ts
-
+import { Prisma } from "@prisma/client";
 import prisma from "@/lib/prisma/prisma";
 import { uploadImage } from "../supabase/uploadImage";
 
@@ -7,7 +7,7 @@ export type ImageInput = {
     id?: string;
     url: string;
     isDisplayImage?: boolean;
-  };
+};
 
 export interface CreateItemInput {
     itemNumber: string;
@@ -33,13 +33,6 @@ export interface GetItemsParams {
     departmentName?: string;
     page?: number; // for pagination
     take?: number; // items per page
-}
-
-interface AddItemImageProps {
-    itemId: string;
-    file: File | Buffer; // depending on how you send it
-    fileName?: string;
-    isDisplayImage?: boolean;
 }
 
 // Check for existing item to prevent duplicates(/api/inventory/add/[storeId]/route.ts)
@@ -109,9 +102,15 @@ export async function createItem(data: CreateItemInput & {
         });
 
         return { success: true, item };
-    } catch (error: any) {
+    } catch (error: unknown) {
+        if (error instanceof Error) {
+            console.error("[Create Item Error]:", error);
+            return { success: false, error: error.message };
+        }
+
+        // fallback for unknown types
         console.error("[Create Item Error]:", error);
-        return { success: false, error: error.message };
+        return { success: false, error: "Unknown error" };
     }
 }
 
@@ -122,14 +121,11 @@ export async function getItems(params: GetItemsParams) {
 
     const skip = (page - 1) * take;
 
-    // Build dynamic "where" clause
-    const where: any = {
-        storeId,
-        AND: []
-    };
+    // Step 1: Build dynamic "AND" conditions
+    const andArray: Prisma.ItemWhereInput[] = [];
 
     if (search) {
-        where.AND.push({
+        andArray.push({
             OR: [
                 { itemNumber: { contains: search, mode: "insensitive" } },
                 { departmentName: { contains: search, mode: "insensitive" } },
@@ -141,15 +137,17 @@ export async function getItems(params: GetItemsParams) {
         });
     }
 
-    if (itemType) {
-        where.AND.push({ itemType });
-    }
+    if (itemType) andArray.push({ itemType });
+    if (departmentName) andArray.push({ departmentName });
 
-    if (departmentName) {
-        where.AND.push({ departmentName });
-    }
+    // Step 2: Final "where" object
+    const where: Prisma.ItemWhereInput = {
+        storeId,
+        AND: andArray.length > 0 ? andArray : undefined,
+    };
 
     try {
+        // Step 3: Query items and count in parallel
         const [items, totalItems] = await Promise.all([
             prisma.item.findMany({
                 where,
@@ -158,7 +156,7 @@ export async function getItems(params: GetItemsParams) {
                 orderBy: { createdAt: "desc" },
                 include: { images: true },
             }),
-            prisma.item.count({ where })
+            prisma.item.count({ where }),
         ]);
 
         const totalPages = Math.ceil(totalItems / take);
@@ -187,6 +185,7 @@ export async function getItems(params: GetItemsParams) {
         };
     }
 }
+
 
 // Add image to an item (/api/inventory/add/images/[itemId]/route.ts)
 export async function addItemImage(itemId: string, file: File, isDisplayImage = false) {
