@@ -1,4 +1,5 @@
 import { CreateItemInput } from "@/lib/services/inventory.services";
+import { CreateSaleInput } from "@/lib/services/sales.services";
 import { CreateUserInput, CreateStoreInput } from "@/lib/services/user.services";
 
 interface CreateUserAndStoreInput extends CreateUserInput {
@@ -30,6 +31,16 @@ export const validateCreateItem = (item: CreateItemInput) => {
     if (!item.departmentName) return "Department name is required";
     if (!item.name) return "Item name is required";
     if (!item.sellingPrice) return "Selling price is required";
+
+    return null;
+};
+
+// Validate required fields for creating a sale (/api/sales/create/[storeId]/route.ts)
+export const validateCreateSale = (sale: CreateSaleInput) => {
+    if (!sale.storeId) return "Store ID is required";
+    if (!sale.cashierId) return "Cashier ID is required";
+    if (!sale.items || sale.items.length === 0) return "At least one sale item is required";
+    if (!sale.status) return "Sale status is required";
 
     return null;
 };

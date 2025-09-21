@@ -8,6 +8,8 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
+// User and Store Models
+
 model User {
   id                String   @id @default(cuid())
   userId            String   @unique
@@ -21,8 +23,9 @@ model User {
   isOwner           Boolean  @default(false)
 
   // Relations
-  storeId String?
-  store   Store?  @relation(fields: [storeId], references: [id])
+  storeId        String?
+  store          Store?  @relation(fields: [storeId], references: [id])
+  salesAsCashier Sale[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -40,15 +43,18 @@ model Store {
   users               User[]
   items               Item[]
   itemTypeDepartments ItemTypeDepartment[]
+  sales               Sale[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
+// Inventory Models
+
 model Item {
   id             String  @id @default(cuid())
   itemNumber     String  @unique
-  itemType       String // e.g. "Inventory", "Service"
+  itemType       String
   departmentName String
   name           String
   description    String?
@@ -56,7 +62,8 @@ model Item {
   unitSize String?
   unitType String?
 
-  qtyAvailable     Int  @default(0)
+  qtyAvailable     Int  @default(0) // actual stock available
+  reservedQty      Int  @default(0) // quantity reserved by draft sales
   lowStockAlertQty Int?
 
   sellingPrice     Float
@@ -64,9 +71,10 @@ model Item {
   markupPercentage Float?
 
   // Relations
-  storeId String
-  store   Store       @relation(fields: [storeId], references: [id])
-  images  ItemImage[]
+  storeId   String
+  store     Store       @relation(fields: [storeId], references: [id])
+  images    ItemImage[]
+  saleItems SaleItem[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -94,4 +102,58 @@ model ItemTypeDepartment {
   updatedAt DateTime @updatedAt
 
   @@unique([itemType, departmentName, storeId])
+}
+
+// Sales Models
+enum SaleStatus {
+  DRAFT
+  COMPLETED
+  REVERSED
+}
+
+enum PaymentMethod {
+  CASH
+  MPESA
+  ECOCASH
+  CARD
+}
+
+model Sale {
+  id         String  @id @default(cuid())
+  name       String?
+  saleNumber String  @unique
+
+  // Relations
+  storeId String
+  store   Store  @relation(fields: [storeId], references: [id])
+
+  cashierId   String?
+  cashier     User?   @relation(fields: [cashierId], references: [id], onDelete: SetNull)
+  cashierName String
+
+  saleItems SaleItem[]
+
+  paymentMethod  PaymentMethod
+  subtotal       Float
+  discountAmount Float?        @default(0)
+  total          Float
+
+  status SaleStatus @default(DRAFT)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model SaleItem {
+  id     String @id @default(cuid())
+  saleId String
+  sale   Sale   @relation(fields: [saleId], references: [id], onDelete: Cascade)
+
+  itemId   String?
+  item     Item?   @relation(fields: [itemId], references: [id], onDelete: SetNull)
+  itemName String
+
+  quantity  Int
+  unitPrice Float
+  subtotal  Float
 }
