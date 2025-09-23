@@ -133,7 +133,7 @@ model Sale {
 
   saleItems SaleItem[]
 
-  paymentMethod  PaymentMethod
+  paymentMethod  PaymentMethod?
   subtotal       Float
   discountAmount Float?        @default(0)
   total          Float

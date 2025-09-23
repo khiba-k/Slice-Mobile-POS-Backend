@@ -15,7 +15,7 @@ export interface CreateSaleInput {
     name?: string;
     saleNumber: string;
     status: SaleStatus;
-    paymentMethod: PaymentMethod;
+    paymentMethod?: PaymentMethod;
     items: CreateSaleItemInput[];
     discountAmount?: number;
 }
@@ -111,7 +111,7 @@ export async function createSale(data: CreateSaleInput) {
                     cashierName,
                     status: data.status,
                     saleNumber: data.saleNumber,
-                    paymentMethod: data.paymentMethod,
+                    paymentMethod: data?.paymentMethod,
                     subtotal,
                     discountAmount: data.discountAmount || 0,
                     total,
