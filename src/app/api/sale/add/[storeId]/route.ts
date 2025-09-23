@@ -21,6 +21,7 @@ export async function POST(req: Request, context: RouteContext) {
     try {
         const { storeId } = await context.params;
         const body = await req.json();
+        console.log("Booody: ", body);
 
         // add storeId to body for validation & service
         const saleData = { ...body, storeId };
