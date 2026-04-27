@@ -3,6 +3,7 @@ import {
     createItem,
     ensureItemTypeDepartment,
     getExistingItem,
+    getItemByBarcode,
     getLastItemNumber,
 } from "@/lib/services/inventory.services";
 import {
@@ -36,6 +37,11 @@ export async function POST(req: Request, context: RouteContext) {
             return conflict(
                 `This item already exists, check item number: ${existingItem.itemNumber}`
             );
+        }
+
+        if (body.barCodeNumber) {
+            const barcodeInUse = await getItemByBarcode(body.barCodeNumber);
+            if (barcodeInUse) return conflict("This barcode is already in use");
         }
 
         const lastNumber = await getLastItemNumber();

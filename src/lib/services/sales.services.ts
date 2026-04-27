@@ -490,7 +490,8 @@ export async function getInventoryForSale(storeId: string) {
             select: {
                 id: true,
                 itemNumber: true,
-                name: true,       // itemName
+                barCodeNumber: true,
+                name: true,
                 unitSize: true,
                 unitType: true,
                 qtyAvailable: true,

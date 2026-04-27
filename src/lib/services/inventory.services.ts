@@ -11,6 +11,7 @@ export type ImageInput = {
 
 export interface CreateItemInput {
     itemNumber: string;
+    barCodeNumber?: string;
     itemType: string;
     departmentName: string;
     name: string;
@@ -53,6 +54,19 @@ export async function getExistingItem(item: CreateItemInput) {
     }
 }
 
+// Check if a barcode is already in use (/api/inventory/add/[storeId]/route.ts)
+export async function getItemByBarcode(barCodeNumber: string) {
+    try {
+        return await prisma.item.findFirst({
+            where: { barCodeNumber },
+            select: { itemNumber: true },
+        });
+    } catch (error) {
+        console.error("[Get Item By Barcode Error]", error);
+        return null;
+    }
+}
+
 // Get the last item number to generate a new one(/api/inventory/add/[storeId]/route.ts)
 export async function getLastItemNumber() {
     try {
@@ -75,6 +89,7 @@ export async function createItem(data: CreateItemInput & {
         const item = await prisma.item.create({
             data: {
                 itemNumber: data.itemNumber,
+                barCodeNumber: data.barCodeNumber,
                 itemType: data.itemType,
                 departmentName: data.departmentName,
                 name: data.name,
@@ -160,6 +175,8 @@ export async function getItems(params: GetItemsParams) {
         ]);
 
         const totalPages = Math.ceil(totalItems / take);
+
+        console.log("Items:", items);
 
         return {
             items,
